@@ -1,0 +1,257 @@
+{
+  "name": "Workflow Backup",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "format": true,
+          "fileName": "={{ $json.name + \".json\" }} "
+        }
+      },
+      "id": "18023583-a624-4a25-a3c4-549d636d3eb9",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        -928,
+        248
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a265c1ab-eb30-45cc-86ea-6caf386e7006",
+      "name": "Loop ",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        -1152,
+        320
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "60bb7908-6784-420c-b9af-70e444706a3a",
+      "name": "Get n8n workflow",
+      "type": "n8n-nodes-base.n8n",
+      "position": [
+        -1376,
+        320
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": false,
+      "credentials": {
+        "n8nApi": {
+          "id": "5Iti5gzKZ8bt80k6",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "events": [
+          "init"
+        ]
+      },
+      "type": "n8n-nodes-base.n8nTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        416
+      ],
+      "id": "903abcd2-49ba-4a78-8ed0-df0e2f57bdb7",
+      "name": "n8n Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "=Workflow Backups {{ $now.format('cccc t dd-MM-yyyy') }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1eMia2o_6SyHGTGvd3NcrguGsWNupr0-F",
+          "mode": "list",
+          "cachedResultName": "n8n backup",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1eMia2o_6SyHGTGvd3NcrguGsWNupr0-F"
+        },
+        "options": {}
+      },
+      "id": "bc007870-920c-456d-86f9-58b0c52e78b1",
+      "name": "Create Backup Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -1600,
+        320
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "X7UX2ccoSUZ4EEs8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Loop ').item.json.name + \".json\" }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Create Backup Folder').item.json.id }}"
+        },
+        "options": {}
+      },
+      "id": "cba04429-d852-40b5-ade2-e93f961c053e",
+      "name": "Upload Workflow(s)",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -704,
+        320
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "X7UX2ccoSUZ4EEs8",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1824,
+        224
+      ],
+      "id": "a4977850-2703-4e46-88c3-0c5354f93d30",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload Workflow(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop ": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get n8n workflow": {
+      "main": [
+        [
+          {
+            "node": "Loop ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create Backup Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Backup Folder": {
+      "main": [
+        [
+          {
+            "node": "Get n8n workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Workflow(s)": {
+      "main": [
+        [
+          {
+            "node": "Loop ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Create Backup Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "73457b60-416b-40ce-ad07-ab23ad9b38a0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fed4a149c0b2d2cd008f3b61dd654dcde39a5bfbd1859ea28683ea1920d2da86"
+  },
+  "id": "jidEkOH4jSJrJW7B",
+  "tags": [
+    {
+      "name": "Personal",
+      "id": "ciTVQysPekqF074Z",
+      "updatedAt": "2025-11-20T09:37:01.797Z",
+      "createdAt": "2025-11-20T09:37:01.797Z"
+    }
+  ]
+}
